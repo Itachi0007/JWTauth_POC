@@ -1,0 +1,19 @@
+{
+  "name": "authenticationapi",
+  "version": "1.0.0",
+  "description": "Authentication APIs - login, register, reset psw",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Itachi0007/authenticationAPI.git"
+  },
+  "author": "Ahmer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Itachi0007/authenticationAPI/issues"
+  },
+  "homepage": "https://github.com/Itachi0007/authenticationAPI#readme"
+}
