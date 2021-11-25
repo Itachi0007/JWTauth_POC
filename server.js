@@ -19,6 +19,14 @@ app.post("/users/login", (req, res) => {
     Controller.login(req, res);
 });
 
+app.post("/token", (req, res) => {
+    Controller.refToken(req, res);
+});
+
+app.delete("/logout", (req, res) => {
+    Controller.logout(req, res);
+});
+
 app.get("/user/name", authenticateToken, (req, res) => {
     // to get my username using token verification
     Controller.username(req, res);
@@ -30,13 +38,16 @@ app.listen(3000, () => {
 
 function authenticateToken(req, res, next) {
     // authenticate the user's token
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+    const authHeader = req.headers["authorization"]; // getting the auth data from header
+    const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
     if (!token) {
         return res.status(401).json("PLEASE PASS A TOKEN");
     }
     jwt.verify(token, process.env.ACCESS_TOKEN, (err, payload) => {
-        if (err) return res.status(403).json("invalid token passed");
+        if (err) {
+            return res.status(403).json("Invalid token passed");
+        }
+        console.log("Token Authenticated on server");
         req.user = payload;
         next();
     });

@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 var users = [];
+let refreshTokens = [];
 
 exports.addUser = async (req, res) => {
     try {
@@ -22,7 +23,7 @@ exports.addUser = async (req, res) => {
 exports.username = async (req, res) => {
     try {
         // only send his username
-        const user = users.filter((data) => data.name == req.user.username)[0];
+        const user = users.filter((data) => data.name == req.user.name)[0];
         const response = `Hi ${user.name}`;
         return res.status(201).send(response);
     } catch {
@@ -38,16 +39,38 @@ exports.login = async (req, res) => {
     try {
         if (await bcrypt.compare(req.body.password, user.password)) {
             const payload = {
-                username: user.name,
+                name: user.name,
             };
-            const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN);
-            res.send(accessToken);
+            // generating access token
+            const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN, {expiresIn: "15s"});
+            const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN);
+            refreshTokens.push(refreshToken);
+            res.json({accessToken: accessToken, refreshToken: refreshToken});
         } else {
             res.send("Not Allowed");
         }
     } catch {
         res.status(500).send("Internal server error");
     }
+};
+
+exports.refToken = async (req, res) => {
+    const refreshToken = req.body.token; // using the refresh token to generate new access token
+    if (refreshToken == null) return res.status(401).send("Please pass a refresh token");
+
+    if (!refreshTokens.includes(refreshToken)) return res.status(403).send("Invalid refresh token");
+
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN, (err, user) => {
+        if (err) return res.status(403).send("Token couldn't be verified");
+        const accessToken = jwt.sign({name: user.name}, process.env.ACCESS_TOKEN, {expiresIn: "30s"}); // payload must not have all details
+        res.json({accessToken: accessToken});
+    });
+};
+
+exports.logout = async (req, res) => {
+    // deleting the refresh token from DB
+    refreshTokens = refreshTokens.filter((token) => token !== req.body.token);
+    return res.status(200).send("Logged out successfully");
 };
 
 exports.get = async (req, res) => {
